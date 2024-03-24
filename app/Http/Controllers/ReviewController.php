@@ -7,42 +7,40 @@ use Illuminate\Http\Request;
 class ReviewController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Add a review to a post.
+     *
+     * @param Request $request
+     * @param int $storyId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function addReview(Request $request, $storyId)
     {
-        //
-    }
+        $validator = Validator::make($request->all(), [
+            'rating' => 'required|integer|between:1,5',
+            'comment' => 'required|string',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // Check if story exists
+        $story = Story::find($storyId);
+        if (!$story) {
+            return response()->json(['error' => 'Story not found'], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        // Create and save the review
+        $review = new Review([
+            'rating' => $request->rating,
+            'comment' => $request->comment,
+            'story_id' => $storyId,
+            // Replace with authenticated user ID if needed
+            'user_id' => 1, // Temporary value, replace with authenticated user
+        ]);
+        $review->save();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json($review, 201);
     }
 }
+
